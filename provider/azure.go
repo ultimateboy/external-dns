@@ -39,6 +39,8 @@ const (
 	azureRecordTTL = 300
 )
 
+var listBatchSize int32 = 1000
+
 type config struct {
 	Cloud                       string `json:"cloud" yaml:"cloud"`
 	TenantID                    string `json:"tenantId" yaml:"tenantId"`
@@ -225,7 +227,7 @@ func (p *AzureProvider) zones() ([]dns.Zone, error) {
 	log.Debug("Retrieving Azure DNS zones.")
 
 	var zones []dns.Zone
-	list, err := p.zonesClient.ListByResourceGroup(p.resourceGroup, nil)
+	list, err := p.zonesClient.ListByResourceGroup(p.resourceGroup, &listBatchSize)
 	if err != nil {
 		return nil, err
 	}
@@ -259,7 +261,7 @@ func (p *AzureProvider) zones() ([]dns.Zone, error) {
 func (p *AzureProvider) iterateRecords(zoneName string, callback func(dns.RecordSet) bool) error {
 	log.Debugf("Retrieving Azure DNS records for zone '%s'.", zoneName)
 
-	list, err := p.recordsClient.ListByDNSZone(p.resourceGroup, zoneName, nil)
+	list, err := p.recordsClient.ListByDNSZone(p.resourceGroup, zoneName, &listBatchSize)
 	if err != nil {
 		return err
 	}
